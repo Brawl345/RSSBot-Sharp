@@ -19,12 +19,33 @@ jobs:
       run: dotnet publish -c debug -r linux-arm /p:PublishSingleFile=true
     - name: Build win-x64
       run: dotnet publish -c debug -r win-x64 /p:PublishSingleFile=true
-    - name: Build osx-64
+    - name: Build osx-x64
       run: dotnet publish -c debug -r osx-x64 /p:PublishSingleFile=true
-    - name: Upload artifact
+    - name: Upload linux-x64
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
-        name: RSSBot-linux-x64-$GITHUB_SHA
+        name: RSSBot-linux-x64-${{github.sha}}
         # Directory containing files to upload
         path: bin/Debug/netcoreapp3.1/linux-x64/publish/
+    - name: Upload linux-arm
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: RSSBot-linux-arm-${{github.sha}}
+        # Directory containing files to upload
+        path: bin/Debug/netcoreapp3.1/linux-arm/publish/
+    - name: Upload win-x64
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: RSSBot-win-x64-${{github.sha}}
+        # Directory containing files to upload
+        path: bin/Debug/netcoreapp3.1/win-x64/publish/
+    - name: Upload osx-x64
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: RSSBot-osx-x64-${{github.sha}}
+        # Directory containing files to upload
+        path: bin/Debug/netcoreapp3.1/osx-x64/publish/

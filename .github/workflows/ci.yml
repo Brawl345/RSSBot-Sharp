@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
     env:
-      dotnet_ver: 3.1
+      DOTNETVER: 3.1
 
     runs-on: ubuntu-latest
 
@@ -29,4 +29,4 @@ jobs:
         # Artifact name
         name: RSSBot-linux-x64-$GITHUB_SHA
         # Directory containing files to upload
-        path: bin/Debug/netcoreapp$dotnet_ver/linux-x64/publish/
+        path: bin/Debug/netcoreapp${DOTNETVER}/linux-x64/publish/

@@ -20,7 +20,7 @@ jobs:
     - name: Build linux-arm
       run: dotnet publish -c debug -r linux-arm /p:PublishSingleFile=true
     - name: Build win-x64
-      run: dotnet publish -c debug -r win-x64 /p:PublishSingleFile=true /p:PublishReadyToRun=true
+      run: dotnet publish -c debug -r win-x64 /p:PublishSingleFile=true
     - name: Build osx-64
       run: dotnet publish -c debug -r osx-x64 /p:PublishSingleFile=true
     - name: Upload artifact

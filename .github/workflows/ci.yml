@@ -21,4 +21,4 @@ jobs:
         # Artifact name
         name: RSSBot-Nightly
         # Directory containing files to upload
-        path: bin/Debug/linux-x64/publish/
+        path: bin/Debug/netcoreapp3.1/linux-x64/publish/

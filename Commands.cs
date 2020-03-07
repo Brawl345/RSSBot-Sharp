@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using CodeHollow.FeedReader;
@@ -34,17 +35,16 @@ namespace RSSBot {
         }
 
         public static async void Subscribe(Message message, GroupCollection args) {
-            string url = args[1].Value;
-            long chatId = message.Chat.Id;
-            RssBotFeed feed = new RssBotFeed(url);
+            var url = args[1].Value;
+            var chatId = message.Chat.Id;
+            var feed = new RssBotFeed(url);
 
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
 
             if (args.Count > 2) {
-                string chatName = args[2].Value;
-                if (!chatName.StartsWith("@")) {
-                    chatName = $"@{chatName}";
-                }
+                var chatName = args[2].Value;
+                if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
+
                 Chat chatInfo;
                 try {
                     chatInfo = await Bot.BotClient.GetChatAsync(chatName);
@@ -75,11 +75,10 @@ namespace RSSBot {
             // Check if we already have the feed
             RssBotFeed existingFeed = Bot.RssBotFeeds
                 .FirstOrDefault(x => x.Url.ToLower().Equals(feed.Url.ToLower()));
-            if (existingFeed == null) {
+            if (existingFeed == null)
                 Bot.RssBotFeeds.Add(feed);
-            } else {
+            else
                 feed = existingFeed;
-            }
 
             // Check if chat already subscribed
             if (feed.Subs.Contains(chatId)) {
@@ -92,16 +91,15 @@ namespace RSSBot {
         }
 
         public static async void Unsubscribe(Message message, GroupCollection args) {
-            string url = args[1].Value;
-            long chatId = message.Chat.Id;
+            var url = args[1].Value;
+            var chatId = message.Chat.Id;
             RssBotFeed feed = Bot.RssBotFeeds
                 .FirstOrDefault(x => x.Url.ToLower().Equals(url.ToLower()));
 
             if (args.Count > 2) {
-                string chatName = args[2].Value;
-                if (!chatName.StartsWith("@")) {
-                    chatName = $"@{chatName}";
-                }
+                var chatName = args[2].Value;
+                if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
+
                 Chat chatInfo;
                 try {
                     chatInfo = await Bot.BotClient.GetChatAsync(chatName);
@@ -125,24 +123,21 @@ namespace RSSBot {
             }
 
             feed.Cleanup(chatId);
-            if (feed.Subs.Count == 0) {
-                Bot.RssBotFeeds.Remove(feed);
-            }
+            if (feed.Subs.Count == 0) Bot.RssBotFeeds.Remove(feed);
 
             await Bot.BotClient.SendTextMessageAsync(message.Chat, "✅ Feed deabonniert!");
             Bot.Save();
         }
 
         public static async void Show(Message message, GroupCollection args) {
-            long chatId = message.Chat.Id;
-            string chatTitle = message.Chat.Type.Equals(ChatType.Private) ? message.Chat.FirstName : message.Chat.Title;
+            var chatId = message.Chat.Id;
+            var chatTitle = message.Chat.Type.Equals(ChatType.Private) ? message.Chat.FirstName : message.Chat.Title;
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
-            
+
             if (args.Count > 1) {
-                string chatName = args[1].Value;
-                if (!chatName.StartsWith("@")) {
-                    chatName = $"@{chatName}";
-                }
+                var chatName = args[1].Value;
+                if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
+
                 Chat chatInfo;
 
                 try {
@@ -161,25 +156,23 @@ namespace RSSBot {
                     return;
                 }
             }
-            
-            string text;
 
-            List<RssBotFeed> feeds = Bot.RssBotFeeds.Where(x => x.Subs.Contains(chatId)).ToList();
+            var feeds = Bot.RssBotFeeds.Where(x => x.Subs.Contains(chatId)).ToList();
 
+            var text = new StringBuilder();
             if (feeds.Count < 1) {
-                text = "❌ Keine Feeds abonniert.";
+                text.Append("❌ Keine Feeds abonniert.");
             } else {
-                text = $"<strong>{HttpUtility.HtmlEncode(chatTitle)}</strong> hat abonniert:\n";
-                for (int i = 0; i < feeds.Count; i++) {
-                    text += $"<strong>{i + 1}</strong>) {feeds[i].Url}\n";
-                }
+                text.Append($"<strong>{HttpUtility.HtmlEncode(chatTitle)}</strong> hat abonniert:\n");
+                for (var i = 0; i < feeds.Count; i++) text.Append($"<strong>{i + 1}</strong>) {feeds[i].Url}\n");
             }
-            await Bot.BotClient.SendTextMessageAsync(message.Chat, text, ParseMode.Html, true);
+
+            await Bot.BotClient.SendTextMessageAsync(message.Chat, text.ToString(), ParseMode.Html, true);
         }
 
         public static async void Sync() {
-            Logger.Info(("================================"));
-            bool hadEntries = false;
+            Logger.Info("================================");
+            var hadEntries = false;
             foreach (RssBotFeed feed in Bot.RssBotFeeds.ToList()) {
                 Logger.Info(feed.Url);
                 try {
@@ -200,13 +193,11 @@ namespace RSSBot {
                     : $"{feed.NewEntries.Count} neue Beiträge");
 
                 foreach (FeedItem entry in feed.NewEntries) {
-                    string postTitle = "Kein Titel";
-                    if (!string.IsNullOrWhiteSpace(entry.Title)) {
-                        postTitle = Utils.StripHtml(entry.Title);
-                    }
+                    var postTitle = "Kein Titel";
+                    if (!string.IsNullOrWhiteSpace(entry.Title)) postTitle = Utils.StripHtml(entry.Title);
 
-                    string postLink = feed.MainLink;
-                    string linkName = postLink;
+                    var postLink = feed.MainLink;
+                    var linkName = postLink;
                     if (!string.IsNullOrWhiteSpace(entry.Link)) {
                         postLink = entry.Link;
                         // FeedProxy URLs
@@ -216,51 +207,44 @@ namespace RSSBot {
                     }
 
                     // Remove "www."
-                    int index = linkName.IndexOf("www.", StringComparison.Ordinal);
-                    if (index > 0) {
-                        linkName = linkName.Remove(index, 4);
-                    }
+                    var index = linkName.IndexOf("www.", StringComparison.Ordinal);
+                    if (index > 0) linkName = linkName.Remove(index, 4);
 
-                    string content = "";
-                    if (!string.IsNullOrWhiteSpace(entry.Content)) {
+                    var content = "";
+                    if (!string.IsNullOrWhiteSpace(entry.Content))
                         content = Utils.ProcessContent(entry.Content); // magic processing missing
-                    } else if (!string.IsNullOrWhiteSpace(entry.Description)) {
+                    else if (!string.IsNullOrWhiteSpace(entry.Description))
                         content = Utils.ProcessContent(entry.Description);
-                    }
 
-                    string text = $"<b>{postTitle}</b>\n<i>{feed.Title}</i>\n{content}";
+                    var text = $"<b>{postTitle}</b>\n<i>{feed.Title}</i>\n{content}";
                     text += $"\n<a href=\"{postLink}\">Weiterlesen auf {linkName}</a>";
 
                     // Send
-                    foreach (long chatId in feed.Subs.ToList()) {
+                    foreach (var chatId in feed.Subs.ToList())
                         try {
                             await Bot.BotClient.SendTextMessageAsync(chatId, text, ParseMode.Html, true, true);
                         } catch (ApiRequestException e) {
                             if (e.ErrorCode.Equals(403)) {
                                 Logger.Warn(e.Message);
                                 feed.Cleanup(chatId);
-                                if (feed.Subs.Count == 0) { // was last subscriber
+                                if (feed.Subs.Count == 0) // was last subscriber
                                     Bot.RssBotFeeds.Remove(feed);
-                                }
                             } else {
                                 Logger.Error($"{e.ErrorCode}: {e.Message}");
                             }
                         }
-                    }
                 }
             }
 
             Logger.Info("Nächster Check in 60 Sekunden");
 
-            if (hadEntries) {
-                Bot.Save();
-            }
+            if (hadEntries) Bot.Save();
 
             Bot.JobQueue.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
         }
 
         public static async void ShowAvailableFeeds(Message message, GroupCollection args) {
-            string url = args[1].Value;
+            var url = args[1].Value;
             IEnumerable<HtmlFeedLink> feeds;
             try {
                 feeds = await FeedReader.GetFeedUrlsFromUrlAsync(url);
@@ -269,14 +253,15 @@ namespace RSSBot {
                 return;
             }
 
-            List<HtmlFeedLink> htmlFeedLinks = feeds.ToList();
+            var htmlFeedLinks = feeds.ToList();
             if (htmlFeedLinks.Count == 0) {
                 await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Keine Feeds gefunden.");
                 return;
             }
 
-            string text = htmlFeedLinks.Aggregate("Feeds gefunden:\n",
-                (current, feedLink) => current + $"* <a href=\"{feedLink.Url}\">{Utils.StripHtml(feedLink.Title)}</a>\n");
+            var text = htmlFeedLinks.Aggregate("Feeds gefunden:\n",
+                (current, feedLink) =>
+                    current + $"* <a href=\"{feedLink.Url}\">{Utils.StripHtml(feedLink.Title)}</a>\n");
 
             await Bot.BotClient.SendTextMessageAsync(message.Chat, text, ParseMode.Html, true);
         }

@@ -202,7 +202,7 @@ namespace RSSBot {
                         postLink = entry.Link;
                         // FeedProxy URLs
                         GroupCollection feedProxy =
-                            Utils.ReturnMatches(postLink, "^https?://feedproxy.google.com/~r/(.+)/.*");
+                            Utils.ReturnMatches(postLink, "^https?://feedproxy.google.com/~r/(.+?)/.*");
                         linkName = feedProxy.Count > 1 ? feedProxy[1].Value : new Uri(postLink).Host;
                     }
 

@@ -1,14 +1,16 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace RSSBot {
     public static class Utils {
+        private static readonly Regex RegexHtml = new Regex("<.*?>");
+
         public static string StripHtml(string input) {
-            return Regex.Replace(input, "<.*?>", String.Empty).Trim();
+            return RegexHtml.Replace(input, string.Empty).Trim();
         }
 
         private static string CleanRss(string input) {
@@ -58,20 +60,11 @@ namespace RSSBot {
         }
 
         public static string ProcessContent(string input) {
-            string content = StripHtml(input);
+            var content = StripHtml(HttpUtility.HtmlDecode(input));
             content = CleanRss(content);
-            if (content.Length > 250) {
-                content = content.Substring(0, 250) + "...";
-            }
+            if (content.Length > 250) content = content.Substring(0, 250) + "...";
 
             return content;
-        }
-
-        public static bool IsCommand(string messageText, string command) {
-            return Regex.Match(messageText,
-                $"^/{command}(?:@{Bot.BotInfo.Username})?$",
-                RegexOptions.IgnoreCase
-            ).Success;
         }
 
         public static GroupCollection ReturnMatches(string text, string pattern) {

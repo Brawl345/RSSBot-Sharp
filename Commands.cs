@@ -208,11 +208,11 @@ namespace RSSBot {
 
                     // Remove "www."
                     var index = linkName.IndexOf("www.", StringComparison.Ordinal);
-                    if (index > 0) linkName = linkName.Remove(index, 4);
+                    if (index > -1) linkName = linkName.Remove(index, 4);
 
                     var content = "";
                     if (!string.IsNullOrWhiteSpace(entry.Content))
-                        content = Utils.ProcessContent(entry.Content); // magic processing missing
+                        content = Utils.ProcessContent(entry.Content);
                     else if (!string.IsNullOrWhiteSpace(entry.Description))
                         content = Utils.ProcessContent(entry.Description);
 

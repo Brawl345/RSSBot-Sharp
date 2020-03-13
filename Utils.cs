@@ -15,7 +15,9 @@ namespace RSSBot {
 
         private static string CleanRss(string input) {
             string[] replacements = {
+                "[←]",
                 "[…]",
+                "[...]",
                 "[bilder]",
                 "[boerse]",
                 "[mehr]",
@@ -41,6 +43,8 @@ namespace RSSBot {
                 "(more…)",
                 "View On WordPress",
                 "Continue reading →",
+                "» weiterlesen",
+                "(Feed generated with  FetchRSS)",
                 "(RSS generated with  FetchRss)",
                 "-- Delivered by Feed43 service",
                 "Meldung bei www.tagesschau.de lesen"

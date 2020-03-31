@@ -35,14 +35,14 @@ namespace RSSBot {
         }
 
         public static async void Subscribe(Message message, GroupCollection args) {
-            var url = args[1].Value;
-            var chatId = message.Chat.Id;
-            var feed = new RssBotFeed(url);
+            string url = args[1].Value;
+            long chatId = message.Chat.Id;
+            RssBotFeed feed = new RssBotFeed(url);
 
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
 
             if (args.Count > 2) {
-                var chatName = args[2].Value;
+                string chatName = args[2].Value;
                 if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
 
                 Chat chatInfo;
@@ -91,13 +91,13 @@ namespace RSSBot {
         }
 
         public static async void Unsubscribe(Message message, GroupCollection args) {
-            var url = args[1].Value;
-            var chatId = message.Chat.Id;
+            string url = args[1].Value;
+            long chatId = message.Chat.Id;
             RssBotFeed feed = Bot.RssBotFeeds
                 .FirstOrDefault(x => x.Url.ToLower().Equals(url.ToLower()));
 
             if (args.Count > 2) {
-                var chatName = args[2].Value;
+                string chatName = args[2].Value;
                 if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
 
                 Chat chatInfo;
@@ -130,12 +130,12 @@ namespace RSSBot {
         }
 
         public static async void Show(Message message, GroupCollection args) {
-            var chatId = message.Chat.Id;
-            var chatTitle = message.Chat.Type.Equals(ChatType.Private) ? message.Chat.FirstName : message.Chat.Title;
+            long chatId = message.Chat.Id;
+            string chatTitle = message.Chat.Type.Equals(ChatType.Private) ? message.Chat.FirstName : message.Chat.Title;
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
 
             if (args.Count > 1) {
-                var chatName = args[1].Value;
+                string chatName = args[1].Value;
                 if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
 
                 Chat chatInfo;
@@ -157,14 +157,14 @@ namespace RSSBot {
                 }
             }
 
-            var feeds = Bot.RssBotFeeds.Where(x => x.Subs.Contains(chatId)).ToList();
+            List<RssBotFeed> feeds = Bot.RssBotFeeds.Where(x => x.Subs.Contains(chatId)).ToList();
 
-            var text = new StringBuilder();
+            StringBuilder text = new StringBuilder();
             if (feeds.Count < 1) {
                 text.Append("❌ Keine Feeds abonniert.");
             } else {
                 text.Append($"<strong>{HttpUtility.HtmlEncode(chatTitle)}</strong> hat abonniert:\n");
-                for (var i = 0; i < feeds.Count; i++) text.Append($"<strong>{i + 1}</strong>) {feeds[i].Url}\n");
+                for (int i = 0; i < feeds.Count; i++) text.Append($"<strong>{i + 1}</strong>) {feeds[i].Url}\n");
             }
 
             await Bot.BotClient.SendTextMessageAsync(message.Chat, text.ToString(), ParseMode.Html, true);
@@ -172,7 +172,7 @@ namespace RSSBot {
 
         public static async void Sync() {
             Logger.Info("================================");
-            var hadEntries = false;
+            bool hadEntries = false;
             foreach (RssBotFeed feed in Bot.RssBotFeeds.ToList()) {
                 Logger.Info(feed.Url);
                 try {
@@ -193,11 +193,11 @@ namespace RSSBot {
                     : $"{feed.NewEntries.Count} neue Beiträge");
 
                 foreach (FeedItem entry in feed.NewEntries) {
-                    var postTitle = "Kein Titel";
+                    string postTitle = "Kein Titel";
                     if (!string.IsNullOrWhiteSpace(entry.Title)) postTitle = Utils.StripHtml(entry.Title);
 
-                    var postLink = feed.MainLink;
-                    var linkName = postLink;
+                    string postLink = feed.MainLink;
+                    string linkName = postLink;
                     if (!string.IsNullOrWhiteSpace(entry.Link)) {
                         postLink = entry.Link;
                         // FeedProxy URLs
@@ -207,20 +207,20 @@ namespace RSSBot {
                     }
 
                     // Remove "www."
-                    var index = linkName.IndexOf("www.", StringComparison.Ordinal);
+                    int index = linkName.IndexOf("www.", StringComparison.Ordinal);
                     if (index > -1) linkName = linkName.Remove(index, 4);
 
-                    var content = "";
+                    string content = "";
                     if (!string.IsNullOrWhiteSpace(entry.Content))
                         content = Utils.ProcessContent(entry.Content);
                     else if (!string.IsNullOrWhiteSpace(entry.Description))
                         content = Utils.ProcessContent(entry.Description);
 
-                    var text = $"<b>{postTitle}</b>\n<i>{feed.Title}</i>\n{content}";
+                    string text = $"<b>{postTitle}</b>\n<i>{feed.Title}</i>\n{content}";
                     text += $"\n<a href=\"{postLink}\">Weiterlesen auf {linkName}</a>";
 
                     // Send
-                    foreach (var chatId in feed.Subs.ToList())
+                    foreach (long chatId in feed.Subs.ToList())
                         try {
                             await Bot.BotClient.SendTextMessageAsync(chatId, text, ParseMode.Html, true, true);
                         } catch (ApiRequestException e) {
@@ -244,7 +244,7 @@ namespace RSSBot {
         }
 
         public static async void ShowAvailableFeeds(Message message, GroupCollection args) {
-            var url = args[1].Value;
+            string url = args[1].Value;
             IEnumerable<HtmlFeedLink> feeds;
             try {
                 feeds = await FeedReader.GetFeedUrlsFromUrlAsync(url);
@@ -253,13 +253,13 @@ namespace RSSBot {
                 return;
             }
 
-            var htmlFeedLinks = feeds.ToList();
+            List<HtmlFeedLink> htmlFeedLinks = feeds.ToList();
             if (htmlFeedLinks.Count == 0) {
                 await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Keine Feeds gefunden.");
                 return;
             }
 
-            var text = htmlFeedLinks.Aggregate("Feeds gefunden:\n",
+            string text = htmlFeedLinks.Aggregate("Feeds gefunden:\n",
                 (current, feedLink) =>
                     current + $"* <a href=\"{feedLink.Url}\">{Utils.StripHtml(feedLink.Title)}</a>\n");
 

@@ -40,7 +40,8 @@ namespace RSSBot {
                 new RegexHandler($"^/start(?:@{BotInfo.Username})?$", Commands.Welcome),
                 new RegexHandler($"^/help(?:@{BotInfo.Username})?$", Commands.Help),
                 new RegexHandler($"^/rss(?:@{BotInfo.Username})?$", Commands.Show),
-                new RegexHandler($"^/rss(?:@{BotInfo.Username})? (@?[A-z0-9_]+)$", Commands.Show),
+                new RegexHandler($"^/rss(?:@{BotInfo.Username})? (@[A-z0-9_]+)$", Commands.Show),
+                new RegexHandler($@"^/rss(?:@{BotInfo.Username})? (-\d+)$", Commands.Show),
                 new RegexHandler(
                     $"^/show(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)$",
                     Commands.ShowAvailableFeeds),
@@ -48,14 +49,20 @@ namespace RSSBot {
                     $"^/sub(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)$",
                     Commands.Subscribe),
                 new RegexHandler(
-                    $"^/sub(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+) (@?[A-z0-9_]+)$$",
+                    $"^/sub(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+) (@[A-z0-9_]+)$",
+                    Commands.Subscribe),
+                new RegexHandler(
+                    $@"^/sub(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+) (-\d+)$",
                     Commands.Subscribe),
                 new RegexHandler(
                     $"^/del(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)$",
                     Commands.Unsubscribe),
                 new RegexHandler(
-                    $"^/del(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+) (@?[A-z0-9_]+)$$",
+                    $"^/del(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+) (@[A-z0-9_]+)$",
                     Commands.Unsubscribe),
+                new RegexHandler(
+                    $@"^/del(?:@{BotInfo.Username})? (http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&~+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+) (-\d+)$",
+                    Commands.Unsubscribe)
             };
 
             JobQueue = new Timer(e => { Commands.Sync(); }, null, TimeSpan.FromSeconds(5),
@@ -75,9 +82,7 @@ namespace RSSBot {
             foreach (RedisValue feedUrl in allFeedUrls) {
                 HashSet<long> subs = new HashSet<long>();
                 RedisValue[] allSubs = Configuration.Database.SetMembers($"{Configuration.RedisHash}:{feedUrl}:subs");
-                foreach (RedisValue sub in allSubs) {
-                    subs.Add(Convert.ToInt64(sub));
-                }
+                foreach (RedisValue sub in allSubs) subs.Add(Convert.ToInt64(sub));
 
                 string lastEntry = Configuration.Database.HashGet($"{Configuration.RedisHash}:{feedUrl}", "last_entry");
 
@@ -91,30 +96,23 @@ namespace RSSBot {
         }
 
         private static void Bot_OnMessage(object? sender, MessageEventArgs messageEventArgs) {
-            var message = messageEventArgs.Message;
+            Message message = messageEventArgs.Message;
             if (message == null || message.Type != MessageType.Text) return;
-            if (!Configuration.Admins.Contains(message.From.Id)) {
-                return;
-            }
+            if (!Configuration.Admins.Contains(message.From.Id)) return;
 
-            foreach (RegexHandler handler in Handlers.Where(handler => handler.HandleUpdate(message))) {
+            foreach (RegexHandler handler in Handlers.Where(handler => handler.HandleUpdate(message)))
                 handler.ProcessUpdate(message);
-            }
         }
 
         public static async void Save() {
-            if (RssBotFeeds.Count > 0) {
-                Logger.Info("Speichere Daten...");
-            }
+            if (RssBotFeeds.Count > 0) Logger.Info("Speichere Daten...");
 
             foreach (RssBotFeed feed in RssBotFeeds) {
                 string feedKey = $"{Configuration.RedisHash}:{feed.Url}";
                 if (string.IsNullOrWhiteSpace(feed.LastEntry)) continue;
 
                 await Configuration.Database.HashSetAsync(feedKey, "last_entry", feed.LastEntry);
-                foreach (long chatId in feed.Subs) {
-                    await Configuration.Database.SetAddAsync($"{feedKey}:subs", chatId);
-                }
+                foreach (long chatId in feed.Subs) await Configuration.Database.SetAddAsync($"{feedKey}:subs", chatId);
 
                 await Configuration.Database.SetAddAsync($"{Configuration.RedisHash}:feeds", feed.Url);
             }

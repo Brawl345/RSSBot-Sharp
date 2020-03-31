@@ -42,16 +42,24 @@ namespace RSSBot {
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
 
             if (args.Count > 2) {
-                string chatName = args[2].Value;
-                if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
-
                 Chat chatInfo;
-                try {
-                    chatInfo = await Bot.BotClient.GetChatAsync(chatName);
-                } catch {
-                    await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
-                    return;
-                }
+                string chatName = args[2].Value;
+                bool isId = long.TryParse(chatName, out chatId);
+
+                if (isId)
+                    try {
+                        chatInfo = await Bot.BotClient.GetChatAsync(chatId);
+                    } catch {
+                        await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
+                        return;
+                    }
+                else
+                    try {
+                        chatInfo = await Bot.BotClient.GetChatAsync(chatName);
+                    } catch {
+                        await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
+                        return;
+                    }
 
                 chatId = chatInfo.Id;
 
@@ -97,16 +105,24 @@ namespace RSSBot {
                 .FirstOrDefault(x => x.Url.ToLower().Equals(url.ToLower()));
 
             if (args.Count > 2) {
-                string chatName = args[2].Value;
-                if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
-
                 Chat chatInfo;
-                try {
-                    chatInfo = await Bot.BotClient.GetChatAsync(chatName);
-                } catch {
-                    await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
-                    return;
-                }
+                string chatName = args[2].Value;
+                bool isId = long.TryParse(chatName, out chatId);
+
+                if (isId)
+                    try {
+                        chatInfo = await Bot.BotClient.GetChatAsync(chatId);
+                    } catch {
+                        await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
+                        return;
+                    }
+                else
+                    try {
+                        chatInfo = await Bot.BotClient.GetChatAsync(chatName);
+                    } catch {
+                        await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
+                        return;
+                    }
 
                 chatId = chatInfo.Id;
 
@@ -135,17 +151,24 @@ namespace RSSBot {
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
 
             if (args.Count > 1) {
-                string chatName = args[1].Value;
-                if (!chatName.StartsWith("@")) chatName = $"@{chatName}";
-
                 Chat chatInfo;
+                string chatName = args[1].Value;
+                bool isId = long.TryParse(chatName, out chatId);
 
-                try {
-                    chatInfo = await Bot.BotClient.GetChatAsync(chatName);
-                } catch {
-                    await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
-                    return;
-                }
+                if (isId)
+                    try {
+                        chatInfo = await Bot.BotClient.GetChatAsync(chatId);
+                    } catch {
+                        await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
+                        return;
+                    }
+                else
+                    try {
+                        chatInfo = await Bot.BotClient.GetChatAsync(chatName);
+                    } catch {
+                        await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
+                        return;
+                    }
 
                 chatId = chatInfo.Id;
                 chatTitle = chatInfo.Title;

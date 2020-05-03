@@ -40,6 +40,8 @@ namespace RSSBot {
                 "Read more »",
                 "Read more",
                 "...Read More",
+                "...mehr lesen",
+                "mehr lesen",
                 "(more…)",
                 "View On WordPress",
                 "Continue reading →",

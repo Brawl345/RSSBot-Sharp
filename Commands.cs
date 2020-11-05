@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using CodeHollow.FeedReader;
 using NLog;
@@ -244,18 +247,9 @@ namespace RSSBot {
 
                     // Send
                     foreach (long chatId in feed.Subs.ToList())
-                        try {
-                            await Bot.BotClient.SendTextMessageAsync(chatId, text, ParseMode.Html, true, true);
-                        } catch (ApiRequestException e) {
-                            if (e.ErrorCode.Equals(403)) {
-                                Logger.Warn(e.Message);
-                                feed.Cleanup(chatId);
-                                if (feed.Subs.Count == 0) // was last subscriber
-                                    Bot.RssBotFeeds.Remove(feed);
-                            } else {
-                                Logger.Error($"{e.ErrorCode}: {e.Message}");
-                            }
-                        }
+                    {
+                        await SendFinishedMessage(chatId, text, feed);
+                    }
                 }
             }
 
@@ -264,6 +258,32 @@ namespace RSSBot {
             if (hadEntries) Bot.Save();
 
             Bot.JobQueue.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
+        }
+
+        private static async Task SendFinishedMessage(long chatId, string text, RssBotFeed feed, int waitTime = 10)
+        {
+            try
+            {
+                await Bot.BotClient.SendTextMessageAsync(chatId, text, ParseMode.Html, true, true);
+                Thread.Sleep(1000);
+            } catch (ApiRequestException e)
+            {
+                if (e.ErrorCode.Equals(403))
+                {
+                    Logger.Warn(e.Message);
+                    feed.Cleanup(chatId);
+                    if (feed.Subs.Count == 0) // was last subscriber
+                        Bot.RssBotFeeds.Remove(feed);
+                } else
+                {
+                    Logger.Error($"{e.ErrorCode}: {e.Message}");
+                }
+            } catch (HttpRequestException e) // likely 429
+            {
+                Logger.Warn($"Got rate limited, waiting {waitTime} seconds...");
+                Thread.Sleep(waitTime * 1000);
+                await SendFinishedMessage(chatId, text, feed, (waitTime * 2));
+            }
         }
 
         public static async void ShowAvailableFeeds(Message message, GroupCollection args) {

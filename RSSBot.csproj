@@ -17,7 +17,7 @@
   <ItemGroup>
     <PackageReference Include="CodeHollow.FeedReader" Version="1.2.1" />
     <PackageReference Include="ini-parser" Version="2.5.2" />
-    <PackageReference Include="NLog" Version="4.7.5" />
+    <PackageReference Include="NLog" Version="4.6.8"/>
     <PackageReference Include="StackExchange.Redis" Version="2.1.58" />
     <PackageReference Include="Telegram.Bot" Version="15.7.1" />
   </ItemGroup>

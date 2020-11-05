@@ -6,14 +6,12 @@ using CodeHollow.FeedReader;
 
 namespace RSSBot {
     public class RssBotFeed {
+        public readonly HashSet<long> Subs = new HashSet<long>();
         public readonly string Url;
         public string LastEntry;
-        public readonly HashSet<long> Subs = new HashSet<long>();
-        public string MainLink { get; private set; }
-        public string Title { get; private set; }
-        public List<FeedItem> NewEntries { get; private set; }
-        
-        public RssBotFeed(string url, string lastEntry = null, HashSet<long> subs = null) {
+
+        public RssBotFeed(string url, string lastEntry = null, HashSet<long> subs = null)
+        {
             Url = url;
             if (!string.IsNullOrWhiteSpace(lastEntry)) {
                 LastEntry = lastEntry;
@@ -24,7 +22,12 @@ namespace RSSBot {
             }
         }
 
-        public async Task Check() {
+        public string MainLink { get; private set; }
+        public string Title { get; private set; }
+        public List<FeedItem> NewEntries { get; private set; }
+
+        public async Task Check()
+        {
             Feed feed = await FeedReader.ReadAsync(Url);
             if (string.IsNullOrWhiteSpace(feed.Link)) {
                 throw new Exception("Kein gültiger RSS-Feed.");
@@ -33,7 +36,10 @@ namespace RSSBot {
             MainLink = feed.Link;
             Title = feed.Title;
 
-            if (feed.Items == null || feed.Items.Count <= 0) return;
+            if (feed.Items == null || feed.Items.Count <= 0) {
+                return;
+            }
+
             NewEntries = string.IsNullOrWhiteSpace(LastEntry)
                 ? feed.Items.ToList()
                 : GetNewEntries(feed.Items);
@@ -43,7 +49,8 @@ namespace RSSBot {
                 : feed.Items.First().Id;
         }
 
-        private List<FeedItem> GetNewEntries(IEnumerable<FeedItem> entries) {
+        private List<FeedItem> GetNewEntries(IEnumerable<FeedItem> entries)
+        {
             List<FeedItem> newEntries = new List<FeedItem>();
             foreach (FeedItem entry in entries) {
                 if (!string.IsNullOrWhiteSpace(entry.Id)) {
@@ -65,17 +72,22 @@ namespace RSSBot {
             return newEntries;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return $"RSS-Feed: '{Url}'";
         }
 
-        public void Cleanup(long chatId) {
+        public void Cleanup(long chatId)
+        {
             Subs.Remove(chatId);
             string feedKey = $"{Configuration.RedisHash}:{Url}";
             Configuration.Database.SetRemove($"{feedKey}:subs", chatId);
 
             // No subscribers, delete all references
-            if (Subs.Count != 0 || !Configuration.Database.KeyExists(feedKey)) return;
+            if (Subs.Count != 0 || !Configuration.Database.KeyExists(feedKey)) {
+                return;
+            }
+
             Configuration.Database.KeyDelete(feedKey);
             Configuration.Database.KeyDelete($"{feedKey}:subs");
             Configuration.Database.SetRemove($"{Configuration.RedisHash}:feeds", Url);

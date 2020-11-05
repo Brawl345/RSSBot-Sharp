@@ -9,11 +9,13 @@ namespace RSSBot {
     public static class Utils {
         private static readonly Regex RegexHtml = new Regex("<.*?>");
 
-        public static string StripHtml(string input) {
+        public static string StripHtml(string input)
+        {
             return RegexHtml.Replace(input, string.Empty).Trim();
         }
 
-        private static string CleanRss(string input) {
+        private static string CleanRss(string input)
+        {
             string[] replacements = {
                 "[←]",
                 "[…]",
@@ -65,22 +67,27 @@ namespace RSSBot {
             return input;
         }
 
-        public static string ProcessContent(string input) {
-            var content = StripHtml(HttpUtility.HtmlDecode(input));
+        public static string ProcessContent(string input)
+        {
+            string content = StripHtml(HttpUtility.HtmlDecode(input));
             content = CleanRss(content);
-            if (content.Length > 250) content = content.Substring(0, 250) + "...";
+            if (content.Length > 250) {
+                content = content.Substring(0, 250) + "...";
+            }
 
             return content;
         }
 
-        public static GroupCollection ReturnMatches(string text, string pattern) {
+        public static GroupCollection ReturnMatches(string text, string pattern)
+        {
             return Regex.Match(text,
                 pattern,
                 RegexOptions.IgnoreCase
             ).Groups;
         }
 
-        public static async Task<bool> IsBotAdmin(long chatId) {
+        public static async Task<bool> IsBotAdmin(long chatId)
+        {
             ChatMember chatMember = await Bot.BotClient.GetChatMemberAsync(chatId, Bot.BotClient.BotId);
             return chatMember.Status.Equals(ChatMemberStatus.Administrator);
         }

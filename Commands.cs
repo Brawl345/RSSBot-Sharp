@@ -17,7 +17,8 @@ namespace RSSBot {
     public static class Commands {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public static async void Welcome(Message message, GroupCollection matches) {
+        public static async void Welcome(Message message, GroupCollection matches)
+        {
             await Bot.BotClient.SendTextMessageAsync(
                 message.Chat,
                 "<b>Willkommen beim RSS-Bot!</b>\nSende /help, um zu starten.",
@@ -25,7 +26,8 @@ namespace RSSBot {
             );
         }
 
-        public static async void Help(Message message, GroupCollection matches) {
+        public static async void Help(Message message, GroupCollection matches)
+        {
             await Bot.BotClient.SendTextMessageAsync(
                 message.Chat,
                 "<b>/rss</b> <i>[Chat]</i>: Abonnierte Feeds anzeigen\n" +
@@ -37,7 +39,8 @@ namespace RSSBot {
             );
         }
 
-        public static async void Subscribe(Message message, GroupCollection args) {
+        public static async void Subscribe(Message message, GroupCollection args)
+        {
             string url = args[1].Value;
             long chatId = message.Chat.Id;
             RssBotFeed feed = new RssBotFeed(url);
@@ -49,20 +52,21 @@ namespace RSSBot {
                 string chatName = args[2].Value;
                 bool isId = long.TryParse(chatName, out chatId);
 
-                if (isId)
+                if (isId) {
                     try {
                         chatInfo = await Bot.BotClient.GetChatAsync(chatId);
                     } catch {
                         await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
                         return;
                     }
-                else
+                } else {
                     try {
                         chatInfo = await Bot.BotClient.GetChatAsync(chatName);
                     } catch {
                         await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
                         return;
                     }
+                }
 
                 chatId = chatInfo.Id;
 
@@ -86,10 +90,11 @@ namespace RSSBot {
             // Check if we already have the feed
             RssBotFeed existingFeed = Bot.RssBotFeeds
                 .FirstOrDefault(x => x.Url.ToLower().Equals(feed.Url.ToLower()));
-            if (existingFeed == null)
+            if (existingFeed == null) {
                 Bot.RssBotFeeds.Add(feed);
-            else
+            } else {
                 feed = existingFeed;
+            }
 
             // Check if chat already subscribed
             if (feed.Subs.Contains(chatId)) {
@@ -101,7 +106,8 @@ namespace RSSBot {
             }
         }
 
-        public static async void Unsubscribe(Message message, GroupCollection args) {
+        public static async void Unsubscribe(Message message, GroupCollection args)
+        {
             string url = args[1].Value;
             long chatId = message.Chat.Id;
             RssBotFeed feed = Bot.RssBotFeeds
@@ -112,20 +118,21 @@ namespace RSSBot {
                 string chatName = args[2].Value;
                 bool isId = long.TryParse(chatName, out chatId);
 
-                if (isId)
+                if (isId) {
                     try {
                         chatInfo = await Bot.BotClient.GetChatAsync(chatId);
                     } catch {
                         await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
                         return;
                     }
-                else
+                } else {
                     try {
                         chatInfo = await Bot.BotClient.GetChatAsync(chatName);
                     } catch {
                         await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
                         return;
                     }
+                }
 
                 chatId = chatInfo.Id;
 
@@ -142,13 +149,16 @@ namespace RSSBot {
             }
 
             feed.Cleanup(chatId);
-            if (feed.Subs.Count == 0) Bot.RssBotFeeds.Remove(feed);
+            if (feed.Subs.Count == 0) {
+                Bot.RssBotFeeds.Remove(feed);
+            }
 
             await Bot.BotClient.SendTextMessageAsync(message.Chat, "✅ Feed deabonniert!");
             Bot.Save();
         }
 
-        public static async void Show(Message message, GroupCollection args) {
+        public static async void Show(Message message, GroupCollection args)
+        {
             long chatId = message.Chat.Id;
             string chatTitle = message.Chat.Type.Equals(ChatType.Private) ? message.Chat.FirstName : message.Chat.Title;
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
@@ -158,20 +168,21 @@ namespace RSSBot {
                 string chatName = args[1].Value;
                 bool isId = long.TryParse(chatName, out chatId);
 
-                if (isId)
+                if (isId) {
                     try {
                         chatInfo = await Bot.BotClient.GetChatAsync(chatId);
                     } catch {
                         await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
                         return;
                     }
-                else
+                } else {
                     try {
                         chatInfo = await Bot.BotClient.GetChatAsync(chatName);
                     } catch {
                         await Bot.BotClient.SendTextMessageAsync(message.Chat, "❌ Dieser Kanal existiert nicht.");
                         return;
                     }
+                }
 
                 chatId = chatInfo.Id;
                 chatTitle = chatInfo.Title;
@@ -190,13 +201,16 @@ namespace RSSBot {
                 text.Append("❌ Keine Feeds abonniert.");
             } else {
                 text.Append($"<strong>{HttpUtility.HtmlEncode(chatTitle)}</strong> hat abonniert:\n");
-                for (int i = 0; i < feeds.Count; i++) text.Append($"<strong>{i + 1}</strong>) {feeds[i].Url}\n");
+                for (int i = 0; i < feeds.Count; i++) {
+                    text.Append($"<strong>{i + 1}</strong>) {feeds[i].Url}\n");
+                }
             }
 
             await Bot.BotClient.SendTextMessageAsync(message.Chat, text.ToString(), ParseMode.Html, true);
         }
 
-        public static async void Sync() {
+        public static async void Sync()
+        {
             Logger.Info("================================");
             bool hadEntries = false;
             foreach (RssBotFeed feed in Bot.RssBotFeeds.ToList()) {
@@ -220,7 +234,9 @@ namespace RSSBot {
 
                 foreach (FeedItem entry in feed.NewEntries) {
                     string postTitle = "Kein Titel";
-                    if (!string.IsNullOrWhiteSpace(entry.Title)) postTitle = Utils.StripHtml(entry.Title);
+                    if (!string.IsNullOrWhiteSpace(entry.Title)) {
+                        postTitle = Utils.StripHtml(entry.Title);
+                    }
 
                     string postLink = feed.MainLink;
                     string linkName = postLink;
@@ -234,20 +250,22 @@ namespace RSSBot {
 
                     // Remove "www."
                     int index = linkName.IndexOf("www.", StringComparison.Ordinal);
-                    if (index > -1) linkName = linkName.Remove(index, 4);
+                    if (index > -1) {
+                        linkName = linkName.Remove(index, 4);
+                    }
 
                     string content = "";
-                    if (!string.IsNullOrWhiteSpace(entry.Content))
+                    if (!string.IsNullOrWhiteSpace(entry.Content)) {
                         content = Utils.ProcessContent(entry.Content);
-                    else if (!string.IsNullOrWhiteSpace(entry.Description))
+                    } else if (!string.IsNullOrWhiteSpace(entry.Description)) {
                         content = Utils.ProcessContent(entry.Description);
+                    }
 
                     string text = $"<b>{postTitle}</b>\n<i>{feed.Title}</i>\n{content}";
                     text += $"\n<a href=\"{postLink}\">Weiterlesen auf {linkName}</a>";
 
                     // Send
-                    foreach (long chatId in feed.Subs.ToList())
-                    {
+                    foreach (long chatId in feed.Subs.ToList()) {
                         await SendFinishedMessage(chatId, text, feed);
                     }
                 }
@@ -255,38 +273,39 @@ namespace RSSBot {
 
             Logger.Info("Nächster Check in 60 Sekunden");
 
-            if (hadEntries) Bot.Save();
+            if (hadEntries) {
+                Bot.Save();
+            }
 
             Bot.JobQueue.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
         }
 
         private static async Task SendFinishedMessage(long chatId, string text, RssBotFeed feed, int waitTime = 10)
         {
-            try
-            {
+            try {
                 await Bot.BotClient.SendTextMessageAsync(chatId, text, ParseMode.Html, true, true);
                 Thread.Sleep(1000);
-            } catch (ApiRequestException e)
-            {
-                if (e.ErrorCode.Equals(403))
-                {
+            } catch (ApiRequestException e) {
+                if (e.ErrorCode.Equals(403)) {
                     Logger.Warn(e.Message);
                     feed.Cleanup(chatId);
                     if (feed.Subs.Count == 0) // was last subscriber
+                    {
                         Bot.RssBotFeeds.Remove(feed);
-                } else
-                {
+                    }
+                } else {
                     Logger.Error($"{e.ErrorCode}: {e.Message}");
                 }
-            } catch (HttpRequestException e) // likely 429
+            } catch (HttpRequestException) // likely 429
             {
-                Logger.Warn($"Got rate limited, waiting {waitTime} seconds...");
+                Logger.Warn($"Rate-Limit erreicht, warte {waitTime} Sekunden...");
                 Thread.Sleep(waitTime * 1000);
-                await SendFinishedMessage(chatId, text, feed, (waitTime * 2));
+                await SendFinishedMessage(chatId, text, feed, waitTime * 2);
             }
         }
 
-        public static async void ShowAvailableFeeds(Message message, GroupCollection args) {
+        public static async void ShowAvailableFeeds(Message message, GroupCollection args)
+        {
             string url = args[1].Value;
             IEnumerable<HtmlFeedLink> feeds;
             try {

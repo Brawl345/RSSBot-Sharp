@@ -19,7 +19,8 @@ namespace RSSBot {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static HashSet<RegexHandler> Handlers;
 
-        private static void Main(string[] args) {
+        private static void Main(string[] args)
+        {
             Configuration.Parse();
             BotClient = new TelegramBotClient(Configuration.BotToken);
             try {
@@ -77,12 +78,15 @@ namespace RSSBot {
             Save();
         }
 
-        private static void ReadAllFeeds() {
+        private static void ReadAllFeeds()
+        {
             RedisValue[] allFeedUrls = Configuration.Database.SetMembers($"{Configuration.RedisHash}:feeds");
             foreach (RedisValue feedUrl in allFeedUrls) {
                 HashSet<long> subs = new HashSet<long>();
                 RedisValue[] allSubs = Configuration.Database.SetMembers($"{Configuration.RedisHash}:{feedUrl}:subs");
-                foreach (RedisValue sub in allSubs) subs.Add(Convert.ToInt64(sub));
+                foreach (RedisValue sub in allSubs) {
+                    subs.Add(Convert.ToInt64(sub));
+                }
 
                 string lastEntry = Configuration.Database.HashGet($"{Configuration.RedisHash}:{feedUrl}", "last_entry");
 
@@ -91,28 +95,43 @@ namespace RSSBot {
             }
         }
 
-        private static void OnProcessExit(object? sender, EventArgs e) {
+        private static void OnProcessExit(object? sender, EventArgs e)
+        {
             Save();
         }
 
-        private static void Bot_OnMessage(object? sender, MessageEventArgs messageEventArgs) {
+        private static void Bot_OnMessage(object? sender, MessageEventArgs messageEventArgs)
+        {
             Message message = messageEventArgs.Message;
-            if (message == null || message.Type != MessageType.Text) return;
-            if (!Configuration.Admins.Contains(message.From.Id)) return;
+            if (message == null || message.Type != MessageType.Text) {
+                return;
+            }
 
-            foreach (RegexHandler handler in Handlers.Where(handler => handler.HandleUpdate(message)))
+            if (!Configuration.Admins.Contains(message.From.Id)) {
+                return;
+            }
+
+            foreach (RegexHandler handler in Handlers.Where(handler => handler.HandleUpdate(message))) {
                 handler.ProcessUpdate(message);
+            }
         }
 
-        public static async void Save() {
-            if (RssBotFeeds.Count > 0) Logger.Info("Speichere Daten...");
+        public static async void Save()
+        {
+            if (RssBotFeeds.Count > 0) {
+                Logger.Info("Speichere Daten...");
+            }
 
             foreach (RssBotFeed feed in RssBotFeeds) {
                 string feedKey = $"{Configuration.RedisHash}:{feed.Url}";
-                if (string.IsNullOrWhiteSpace(feed.LastEntry)) continue;
+                if (string.IsNullOrWhiteSpace(feed.LastEntry)) {
+                    continue;
+                }
 
                 await Configuration.Database.HashSetAsync(feedKey, "last_entry", feed.LastEntry);
-                foreach (long chatId in feed.Subs) await Configuration.Database.SetAddAsync($"{feedKey}:subs", chatId);
+                foreach (long chatId in feed.Subs) {
+                    await Configuration.Database.SetAddAsync($"{feedKey}:subs", chatId);
+                }
 
                 await Configuration.Database.SetAddAsync($"{Configuration.RedisHash}:feeds", feed.Url);
             }

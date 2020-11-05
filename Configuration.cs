@@ -18,7 +18,8 @@ namespace RSSBot {
         public static List<int> Admins;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public static void Parse() {
+        public static void Parse()
+        {
             if (!File.Exists("NLog.config")) {
                 Console.WriteLine("NLog.config nicht gefunden, setze auf INFO...");
                 LoggingConfiguration config = new LoggingConfiguration();

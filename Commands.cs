@@ -43,7 +43,7 @@ namespace RSSBot {
         {
             string url = args[1].Value;
             long chatId = message.Chat.Id;
-            RssBotFeed feed = new RssBotFeed(url);
+            RssBotFeed feed = new(url);
 
             await Bot.BotClient.SendChatActionAsync(message.Chat, ChatAction.Typing);
 
@@ -196,7 +196,7 @@ namespace RSSBot {
 
             List<RssBotFeed> feeds = Bot.RssBotFeeds.Where(x => x.Subs.Contains(chatId)).ToList();
 
-            StringBuilder text = new StringBuilder();
+            StringBuilder text = new();
             if (feeds.Count < 1) {
                 text.Append("❌ Keine Feeds abonniert.");
             } else {
@@ -236,6 +236,7 @@ namespace RSSBot {
                     string postTitle = "Kein Titel";
                     if (!string.IsNullOrWhiteSpace(entry.Title)) {
                         postTitle = Utils.StripHtml(entry.Title);
+                        postTitle = Utils.EscapeHtml(postTitle);
                     }
 
                     string postLink = feed.MainLink;

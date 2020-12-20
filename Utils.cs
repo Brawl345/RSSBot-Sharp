@@ -7,11 +7,18 @@ using Telegram.Bot.Types.Enums;
 
 namespace RSSBot {
     public static class Utils {
-        private static readonly Regex RegexHtml = new Regex("<.*?>");
+        private static readonly Regex RegexHtml = new("<.*?>");
 
         public static string StripHtml(string input)
         {
             return RegexHtml.Replace(input, string.Empty).Trim();
+        }
+
+        public static string EscapeHtml(string input)
+        {
+            input = input.Replace("<", "&lt;");
+            input = input.Replace(">", "&gt;");
+            return input;
         }
 
         private static string CleanRss(string input)
